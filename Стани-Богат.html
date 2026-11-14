@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080d2b">
+<title>Стани богат: Химия — 10. клас (ИИ Жокер)</title>
+<style>
+:root{color-scheme:dark;--bg:#05091f;--panel:#0d1640;--panel2:#111e50;--gold:#f3c65e;--gold2:#ffe49a;--green:#35d58a;--red:#ff626c;--muted:#aeb9d8;--ai-cyan:#00e5ff}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% -20%,#202d70 0%,#080d2b 48%,#030616 100%);color:#f7f8ff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+button{font:inherit}
+.app{width:min(1240px,100%);min-height:100vh;margin:auto;padding:clamp(12px,2.5vw,28px);display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:22px;align-items:center}
+.game{min-width:0;display:flex;flex-direction:column;align-items:center;gap:18px}
+header{text-align:center}
+h1{margin:0;color:var(--gold);font-size:clamp(25px,4vw,38px);letter-spacing:.09em;text-transform:uppercase;text-shadow:0 0 22px #e0b04055}
+.subtitle{margin:6px 0 0;color:var(--green);font-weight:600}
+.progress{width:100%;display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:14px}
+.progress strong{color:var(--gold2)}
+.question{width:100%;min-height:130px;padding:clamp(20px,4vw,34px);display:grid;place-items:center;text-align:center;background:linear-gradient(145deg,#17265f,#080f34);border:2px solid var(--gold);border-radius:24px;box-shadow:0 12px 38px #0007,0 0 20px #e0b04022;font-size:clamp(18px,2.4vw,24px);font-weight:650;line-height:1.45}
+.answers{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.answer{min-height:68px;padding:15px 18px;border:1.5px solid #b68d3d;border-radius:16px;background:linear-gradient(110deg,#101b4a,#17265d,#101b4a);color:#fff;text-align:left;cursor:pointer;display:flex;align-items:flex-start;gap:12px;transition:transform .15s,border-color .15s,background .15s}
+.answer:hover:not(:disabled),.answer:focus-visible{transform:translateY(-2px);border-color:var(--gold2);outline:2px solid #f3c65e55;outline-offset:2px}
+.letter{color:var(--gold);font-weight:800;flex:0 0 22px}
+.answer.selected{background:#a87916;color:#fff;border-color:#fff}
+.answer.correct{background:#087b50;border-color:#56f0ad}
+.answer.wrong{background:#8d2635;border-color:#ff8d95}
+.answer:disabled{cursor:default}
+.answer.hidden-50{display:none}
+.controls{width:100%;display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+.action{border:1px solid #7180ad;background:#29365f;color:white;border-radius:12px;padding:11px 18px;font-weight:700;cursor:pointer;transition:.15s}
+.action:hover:not(:disabled){filter:brightness(1.2);transform:translateY(-1px)}
+.action:disabled{opacity:.45;cursor:not-allowed}
+.action.danger{background:#702b38;border-color:#b95c68}
+.panel{background:#0b1236dd;border:1.5px solid #b68d3d;border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:16px;max-height:calc(100vh - 48px);min-height:500px}
+.panel-title{text-align:center;color:var(--gold);font-weight:800;letter-spacing:.05em}
+.jokers{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.joker{min-width:0;aspect-ratio:1;border-radius:50%;border:2px solid var(--green);background:#101d48;color:#a5ffd2;font-weight:800;cursor:pointer;display:grid;place-items:center;font-size:13px;padding:0;transition:all .2s;}
+.joker:hover:not(:disabled){background:var(--green);color:#061b25}
+.joker:disabled{opacity:.35;cursor:not-allowed;text-decoration:line-through}
+
+/* Специален стил за ИИ жокера */
+#joker-ai {border-color:var(--ai-cyan); color:var(--ai-cyan); text-shadow:0 0 5px var(--ai-cyan);}
+#joker-ai:hover:not(:disabled) {background:var(--ai-cyan); color:#000; box-shadow:0 0 12px var(--ai-cyan);}
+
+.ladder{list-style:none;padding:0;margin:0;display:flex;flex-direction:column-reverse;gap:3px;overflow:auto}
+.ladder li{display:flex;align-items:center;gap:9px;padding:6px 10px;border-radius:8px;color:var(--gold);font-size:14px}
+.ladder .num{width:24px;text-align:right;color:#8f9aba;font-size:12px}
+.ladder li.safe{font-weight:800;color:#fff}
+.ladder li.safe:after{content:"◆";font-size:9px;color:var(--green);margin-left:auto}
+.ladder li.active{background:var(--gold);color:#11182d;font-weight:900}
+.ladder li.active .num{color:#11182d}
+.mobile-prize{display:none;color:var(--green);font-weight:800}
+.hint{color:var(--muted);font-size:12px;text-align:center;margin-top:auto}
+.overlay{position:fixed;inset:0;background:#020514df;display:none;place-items:center;padding:18px;z-index:10}
+.overlay.show{display:grid}
+.dialog{width:min(480px,100%);background:#0d1640;border:2px solid var(--gold);border-radius:22px;padding:26px;text-align:center;box-shadow:0 20px 70px #000b}
+.dialog h2{margin:0 0 12px;color:var(--gold)}
+.dialog p{white-space:pre-line;line-height:1.55}
+
+/* Анимация за ИИ отговора */
+.ai-typing {
+    text-align: left;
+    background: #080d2b;
+    border: 1px solid var(--ai-cyan);
+    padding: 15px;
+    border-radius: 12px;
+    margin-top: 15px;
+    font-family: monospace;
+    font-size: 14px;
+    color: var(--ai-cyan);
+    display: none;
+    box-shadow: inset 0 0 10px #00e5ff33;
+}
+.ai-typing.active { display: block; }
+.ai-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 15px;
+    background: var(--ai-cyan);
+    animation: blink 1s step-end infinite;
+    vertical-align: text-bottom;
+    margin-left: 2px;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.dialog-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:18px}
+.result-prize{font-size:26px;color:var(--gold2);font-weight:900}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:850px){.app{grid-template-columns:1fr;align-items:start}.panel{min-height:0;max-height:none}.ladder{display:none}.mobile-prize{display:block}.hint{margin-top:0}}
+@media(max-width:560px){.answers{grid-template-columns:1fr;gap:10px}.answer{min-height:58px}.question{min-height:115px;border-radius:18px}.app{padding:14px}.panel{padding:14px}.jokers{max-width:360px;width:100%;align-self:center}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="app" id="game-ui">
+<section class="game" aria-labelledby="game-title">
+<header>
+<h1 id="game-title">Стани богат</h1>
+<p class="subtitle">Тема: Термохимия – скорост и фактори · Катализа и катализатори · 10. клас</p>
+</header>
+<div class="progress"><span id="question-count">Въпрос 1 от 15</span><strong id="current-prize">50 лв.</strong></div>
+<div class="mobile-prize" id="mobile-prize" aria-live="polite">Въпрос 1 за 50 лв.</div>
+<div class="question" id="question-text" aria-live="polite">Зареждане на въпроса...</div>
+<div class="answers" id="answers-container">
+<button class="answer" id="btn-0" type="button"><span class="letter">A</span><span id="text-0"></span></button>
+<button class="answer" id="btn-1" type="button"><span class="letter">B</span><span id="text-1"></span></button>
+<button class="answer" id="btn-2" type="button"><span class="letter">C</span><span id="text-2"></span></button>
+<button class="answer" id="btn-3" type="button"><span class="letter">D</span><span id="text-3"></span></button>
+</div>
+<div class="controls">
+<button class="action" id="give-up-btn" type="button">Откажи се и вземи парите</button>
+<button class="action danger" id="restart-btn" type="button">Рестарт</button>
+</div>
+<p class="sr-only" id="status" role="status" aria-live="polite"></p>
+</section>
+<aside class="panel" aria-label="Жокери и награди">
+<div class="panel-title">ТВОИТЕ ЖОКЕРИ</div>
+<div class="jokers">
+<button class="joker" id="joker-50" type="button" title="Премахва два грешни отговора">50:50</button>
+<button class="joker" id="joker-friend" type="button" title="Съвет от приятел">📞</button>
+<button class="joker" id="joker-audience" type="button" title="Помощ от публиката">👥</button>
+<button class="joker" id="joker-ai" type="button" title="Попитай Изкуствен Интелект">AI</button>
+</div>
+<div class="panel-title">СТЪЛБИЦА НА ПЕЧАЛБИТЕ</div>
+<ul class="ladder" id="ladder"></ul>
+<p class="hint">◆ Гарантирана сума · Използвай всеки жокер само веднъж</p>
+</aside>
+</main>
+<div class="overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-text">
+<div class="dialog">
+<h2 id="modal-title">Съобщение</h2>
+<p id="modal-text"></p>
+<div class="ai-typing" id="ai-box">
+    <span id="ai-text"></span><span class="ai-cursor"></span>
+</div>
+<div class="dialog-actions" id="modal-actions">
+<button class="action" id="modal-ok" type="button">Добре</button>
+</div>
+</div>
+</div>
+
+<!-- Свързване към външния JavaScript файл -->
+<script src="game.js"></script>
+</body>
+</html>
